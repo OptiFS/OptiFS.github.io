@@ -1,3 +1,12 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+  background-color: #DCD6F7;  
+}
+
 nav ul {
     list-style-type: none;
     margin: 0;
@@ -26,4 +35,23 @@ nav li a:hover {
     color: #DCD6F7;
     background-color: #222643;
     transition: 0.5s;
+}
+
+#ttl {
+    margin: 5%;
+    text-align: center;
+    font-size: 26px;
+}
+
+.content {
+    margin: 5% 10%;
+    text-align: center;
+}
+
+.content div {
+    margin: 3% 0%;
+}
+
+.content h1 {
+    color: #222643;
 }
