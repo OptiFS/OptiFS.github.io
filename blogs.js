@@ -12,7 +12,7 @@ function dateSorter(x, y) {
 };
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    function createBlog(blog) {
+    function createBlog(blog, i) {
 
         const icon = icons[blog.category]
 
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     ${blog.author}
                     </span>
                 </div>
-                <a href="#" class="inline-flex items-center font-medium text-green-600 hover:underline">
+                <a href="#" class="read-more inline-flex items-center font-medium text-green-600 hover:underline" data-blog-index="${i}">
                     Read more
                     <svg class="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </a>
@@ -45,31 +45,83 @@ document.addEventListener('DOMContentLoaded', (event) => {
   
 
     function display() {
-    const container = document.getElementById("blogs-container");
-    let content = blogs.map(createBlog).join('');
-    container.innerHTML = content;
+        const container = document.getElementById("blogs-container");
+        container.style.display = "";
+        document.getElementById("full-blog").innerHTML = "";
+        
+        let content = blogs.map((blog, i) => createBlog(blog, i)).join('');
+        container.innerHTML = content;
+
+        document.querySelectorAll(".read-more").forEach((blog) => {
+            blog.addEventListener("click", function(event) {
+                event.preventDefault();
+                const i = parseInt(this.getAttribute("data-blog-index"), 10);
+                fullBlog(i);
+            });
+        });
     }
 
+    function fullBlog(i) {
+        document.getElementById("blogs-container").style.display = "none";
+
+        const container = document.getElementById("full-blog");
+        const blog = blogs[i];
+        const icon = icons[blog.category];
+        
+        container.innerHTML = `
+        <section class="bg-white py-8 px-8">
+            <div class="max-w-6xl mx-auto flex flex-wrap md:flex-nowrap">
+                <div class="w-full">
+                    <div class="flex justify-between items-center mb-5">
+                        <span class="bg-primary-100 text-green-500 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded">
+                            ${icon}
+                            ${blog.category}
+                        </span>
+                        <span class="text-sm text-gray-500">${blog.date}</span>
+                    </div>
+                    <h1 class="text-4xl font-bold mt-2 mb-4">${blog.title}</h1>
+                    <div class="flex items-center mb-4">
+                        <img class="w-10 h-10 rounded-full mr-4" src=${blog.imageUrl} alt=${blog.author}>
+                        <span class="font-medium text-gray-700">By ${blog.author}</span>
+                    </div>
+                    <p class="text-gray-500 text-lg mb-6">
+                        ${blog.content}
+                    </p>
+                    <a href="#" class="return-blogs inline-flex items-center font-medium text-green-600 hover:underline" data-blog-index="${i}">
+                        Back to Blogs
+                    <svg class="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </section>`
+        
+        container.querySelector(".return-blogs").addEventListener("click", function(event) {
+            event.preventDefault();
+            display();
+        });
+    }
 
     display();
 });
 
 const blogs = [
     {
-        title: "Testing the Blogs 1",
-        date: "Jan 13 2024",
-        blurb: "Synopsis of blog here",
-        category: "Brainstorming",
-        author: "Your Name",
-        imageUrl: "zoe.jpg"
+        title: "Commonly Used Syscalls",
+        date: "Jan 17 2024",
+        blurb: "Figuring out how to implement common UNIX syscalls!",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "Today I started implementing some commonly used system calls, open and read. I started with the Open and Opendir functions for nodes, as I had written the lookup function yesterday, and it does not operate properly without the different open calls. Once I had that working, I then implemented the Readdir call to be able to list the contents of a directory. At this point, it was encouraging to see progress in the filesystem, as I could see that common shell commands were working.<br><br>Then I wanted to implement the getattr function, which shows all the attributes of a file when you do something like <strong>ls -l</strong>. One thing I found interesting was that you have to stat the nodes differently depending if they are the root node of the filesystem or if it is just a normal node. If it isn't the root node, you have to use <strong>Lstat</strong> to handle symbolic links as well, which we will be implementing later on in our filesystem.",
     },
     {
-        title: "Testing the Blogs 2",
-        date: "Jan 15 2024",
-        blurb: "Synopsis of blog here",
+        title: "Issues with Writing",
+        date: "Jan 18 2024",
+        blurb: "Who would have thought you had to implement so much to write to a file?",
         category: "Debugging",
-        author: "Your Name",
-        imageUrl: "zoe.jpg"
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "I’ve been trying to implement the write syscall in our virtual filesystem, but it is becoming quite difficult to do. This was the first time that I had to take output from one function into another and I wasn't quite sure what to do. This was especially hard due to the surprising lack of documentation in the go FUSE library about writing to files.<br><br>Eventually I thought that I had got it working, using a stub for opening a file for writing (as I was unsure how to pass the information at that point), only to find that on running the command <strong>echo 'hi' > niall</strong> that the file system responded saying <br><strong>bash: niall: Operation not supported.</strong><br>This was not expected behaviour, as after running stat on the file <strong>niall</strong>, I discovered that it was set up for reading, writing and executing. Upon further debugging, the filesystem didn't even enter the write function in the first place.<br><br>After looking further into our code and some examples that we found online, Niall realised that we needed to implement setattr as well as setxattr. This was needed to set the most recent access for the file that we were writing to, and also things like the file size, type, ownership, etc. After implementing this writing seems to work flawlessly!<br><br>Now we have a nearly complete foundation to base on!",
     },
     {
         title: "Testing the Blogs 3",
@@ -77,7 +129,8 @@ const blogs = [
         blurb: "Synopsis of blog here",
         category: "Testing",
         author: "Your Name",
-        imageUrl: "zoe.jpg"
+        imageUrl: "zoe.jpg",
+        content: "lorem ipsum",
     },
     {
         title: "Testing the Blogs 4",
@@ -85,7 +138,8 @@ const blogs = [
         blurb: "Synopsis of blog here",
         category: "Production",
         author: "Your Name",
-        imageUrl: "zoe.jpg"
+        imageUrl: "zoe.jpg",
+        content: "lorem ipsum",
     },
 ]
 
