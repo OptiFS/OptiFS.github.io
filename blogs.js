@@ -157,7 +157,16 @@ const blogs = [
         category: "Brainstorming",
         author: "Zoe Collins",
         imageUrl: "zoe.jpg",
-        content: "As Niall was still polishing off the custom metadata system, I decided to have a look at the documentation required for this project, specifically the functional specification and the user manual. I wanted to get a good grasp of what was needed for each of these pieces of documentation, so that we could both be thinking about them while we were coding the actual project.<br><br> I started with the functional specification, and wrote the introduction section for that, as it is just a synopsis of the project itself, not needing any dirty details of the inner workings, which aren't finished yet.<br><br> I decided to have a look at the user manual and what was required, and then quickly got stuck. We needed to write about how the user interacts with our project - but the user (the students) <i>aren't supposed to know that our project is there!!</i> I decided to leave it and ask Stephen about it when we met with him.<br><br> Finally I did a little bit of debugging around the append function - as I had some concerns to do with <strong>race conditions over NFS</strong>, but all seemed well.",
+        content: "As Niall was still polishing off the custom metadata system, I decided to have a look at the documentation required for this project, specifically the functional specification and the user manual. I wanted to get a good grasp of what was needed for each of these pieces of documentation, so that we could both be thinking about them while we were coding the actual project.<br><br> I started with the functional specification, and wrote the introduction section for that, as it is just a synopsis of the project itself, not needing any dirty details of the inner workings, which aren't finished yet.<br><br> I decided to have a look at the user manual and what was required, and then quickly got stuck. We needed to write about how the user interacts with our project - but the user (the students) <i>aren't supposed to know that our project is there!!</i> I decided to leave it and ask Stephen about it when we met with him.<br><br> Finally I did a little bit of debugging around the append function - as I had some concerns to do with <strong>race conditions over NFS</strong>, but all seemed well.<br><br>",
+    },
+    {
+        title: "Back to the Programming Grind!",
+        date: "Feb 12 2024",
+        blurb: "How can we possibly handle persistance? Just wait and see…",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "After finishing my intensive two week module, I decided to ease myself back into the swing of things by implementing locks on saving and retrieving our three hashmaps. I had already figured out how to save and retrieve one of them on an earlier date, so I copied that across to the two new hashmaps and gave them all their own file to be encoded into. I also made sure that encoding and decoding didn’t mess up any of the data, as we had implemented our own custom metadata system and we were not sure how it would take to being serialised.<br><br>After seeing that there was no issue, I decided to create 3 different read-write lock variables: <strong>one for each set of hashmaps and corresponding functions that deal with these hashmaps.</strong> I implemented write locks on the hashmaps, as it is crucial that only one process is accessing these at one time.<br><br> ",
     },
     
 ]
