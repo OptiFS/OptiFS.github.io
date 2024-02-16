@@ -106,6 +106,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 const blogs = [
     {
+        title: "Everything Has To Start Somewhere",
+        date: "Jan 16 2024",
+        blurb: "Finally being able to lay the foundations of OptiFS!",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "We’re finally at the point where we can start the actual filesystem!<br><br> Today I started working on the foundations of the filesystem. I had already done my own versions of a FUSE filesystem, however since we are implementing a loopback filesystem I had to learn how to handle and pass calls to an EXT4 filesystem.<br><br> I started with the Lookup function, as that’s the basis of the filesystem. Nearly every operation starts with a lookup. After this I added a function to create a new node in the system, and a function to generate a unique inode number to go along with this. As our system is being run over NFS in a lab based setting, I decided that we should have as many inode number possibilities as possible, so that there would never be overlap. If this were to happen, this would <strong>break</strong> our filesystem!!<br><br> Once I had this all implemented, I wanted to see it working in action, so I started implementing it to run as a loopback filesystem by mounting OptiFS over an already existing filesystem <i>(directory)</i>.",
+    },
+    {
         title: "Commonly Used Syscalls",
         date: "Jan 17 2024",
         blurb: "Figuring out how to implement common UNIX syscalls!",
@@ -153,7 +162,7 @@ const blogs = [
     {
         title: "Looking into Documentation",
         date: "Feb 6 2024",
-        blurb: "But the user doesn't know our system is there!!",
+        blurb: "...But the user doesn't know our system is there!!",
         category: "Brainstorming",
         author: "Zoe Collins",
         imageUrl: "zoe.jpg",
