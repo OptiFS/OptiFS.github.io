@@ -177,6 +177,15 @@ const blogs = [
         imageUrl: "zoe.jpg",
         content: "After finishing my intensive two week module, I decided to ease myself back into the swing of things by implementing locks on saving and retrieving our three hashmaps. I had already figured out how to save and retrieve one of them on an earlier date, so I copied that across to the two new hashmaps and gave them all their own file to be encoded into. I also made sure that encoding and decoding didn’t mess up any of the data, as we had implemented our own custom metadata system and we were not sure how it would take to being serialised.<br><br>After seeing that there was no issue, I decided to create 3 different read-write lock variables: <strong>one for each set of hashmaps and corresponding functions that deal with these hashmaps.</strong> I implemented write locks on the hashmaps, as it is crucial that only one process is accessing these at one time.<br><br> ",
     },
+    {
+        title: "Going Mutex Crazy!",
+        date: "Feb 13 2024",
+        blurb: "Read locks, write locks, what to use and when to use them?",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "Today I decided to look more into locks and how to lock all operations/functions in our system, as this would play a big part in getting the system working over NFS. I discovered that there are two different types of locks that are pre implemented in the <strong>sync</strong> package in Go: RLock() and Lock(). RLock() allows for concurrent read operations, as long as there is no write, and Lock() is for write only operations, one at a time, like the ones I had put on saving the hashmaps.<br><br> I methodically went through and figured out which type of lock I needed for each function, with the general rule of if the function was modifying data in any way it needed a Lock(). I added locks in each file in the metadata package, where they were needed: <strong><br><br>persistence_api.go<br>common.go<br>directory_metadata.go<br>regular_file_metadata.go<br>general_api.go<br><br></strong> In figuring out when to use dirMutex or metadataMutex, I added a boolean flag to check whether we are working with a directory or not, and I pass it to each function where both locks could be implemented.<br><br> After this, I started implementing sysadmin privileges. I made a sysadmin struct, which holds the sysadmin’s UID, GID and a flag to tell if the sysadmin has been set. I worked on saving and retrieving the sysadmin struct, and setting a user as the sysadmin.",
+    },
     
 ]
 
