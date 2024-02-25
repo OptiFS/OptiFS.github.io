@@ -109,6 +109,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 const blogs = [
     {
+        title: "Everything Has To Start Somewhere",
+        date: "Jan 16 2024",
+        blurb: "Finally being able to lay the foundations of OptiFS!",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "We’re finally at the point where we can start the actual filesystem!<br><br> Today I started working on the foundations of the filesystem. I had already done my own versions of a FUSE filesystem, however since we are implementing a loopback filesystem I had to learn how to handle and pass calls to an EXT4 filesystem.<br><br> I started with the Lookup function, as that’s the basis of the filesystem. Nearly every operation starts with a lookup. After this I added a function to create a new node in the system, and a function to generate a unique inode number to go along with this. As our system is being run over NFS in a lab based setting, I decided that we should have as many inode number possibilities as possible, so that there would never be overlap. If this were to happen, this would <strong>break</strong> our filesystem!!<br><br> Once I had this all implemented, I wanted to see it working in action, so I started implementing it to run as a loopback filesystem by mounting OptiFS over an already existing filesystem <i>(directory)</i>.",
+    },
+    {
         title: "Commonly Used Syscalls",
         date: "Jan 17 2024",
         blurb: "Figuring out how to implement common UNIX syscalls!",
@@ -156,11 +165,29 @@ const blogs = [
     {
         title: "Looking into Documentation",
         date: "Feb 6 2024",
-        blurb: "But the user doesn't know our system is there!!",
+        blurb: "...But the user doesn't know our system is there!!",
         category: "Brainstorming",
         author: "Zoe Collins",
         imageUrl: "zoe.jpg",
-        content: "As Niall was still polishing off the custom metadata system, I decided to have a look at the documentation required for this project, specifically the functional specification and the user manual. I wanted to get a good grasp of what was needed for each of these pieces of documentation, so that we could both be thinking about them while we were coding the actual project.<br><br> I started with the functional specification, and wrote the introduction section for that, as it is just a synopsis of the project itself, not needing any dirty details of the inner workings, which aren't finished yet.<br><br> I decided to have a look at the user manual and what was required, and then quickly got stuck. We needed to write about how the user interacts with our project - but the user (the students) <i>aren't supposed to know that our project is there!!</i> I decided to leave it and ask Stephen about it when we met with him.<br><br> Finally I did a little bit of debugging around the append function - as I had some concerns to do with <strong>race conditions over NFS</strong>, but all seemed well.",
+        content: "As Niall was still polishing off the custom metadata system, I decided to have a look at the documentation required for this project, specifically the functional specification and the user manual. I wanted to get a good grasp of what was needed for each of these pieces of documentation, so that we could both be thinking about them while we were coding the actual project.<br><br> I started with the functional specification, and wrote the introduction section for that, as it is just a synopsis of the project itself, not needing any dirty details of the inner workings, which aren't finished yet.<br><br> I decided to have a look at the user manual and what was required, and then quickly got stuck. We needed to write about how the user interacts with our project - but the user (the students) <i>aren't supposed to know that our project is there!!</i> I decided to leave it and ask Stephen about it when we met with him.<br><br> Finally I did a little bit of debugging around the append function - as I had some concerns to do with <strong>race conditions over NFS</strong>, but all seemed well.<br><br>",
+    },
+    {
+        title: "Back to the Programming Grind!",
+        date: "Feb 12 2024",
+        blurb: "How can we possibly handle persistance? Just wait and see…",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "After finishing my intensive two week module, I decided to ease myself back into the swing of things by implementing locks on saving and retrieving our three hashmaps. I had already figured out how to save and retrieve one of them on an earlier date, so I copied that across to the two new hashmaps and gave them all their own file to be encoded into. I also made sure that encoding and decoding didn’t mess up any of the data, as we had implemented our own custom metadata system and we were not sure how it would take to being serialised.<br><br>After seeing that there was no issue, I decided to create 3 different read-write lock variables: <strong>one for each set of hashmaps and corresponding functions that deal with these hashmaps.</strong> I implemented write locks on the hashmaps, as it is crucial that only one process is accessing these at one time.<br><br> ",
+    },
+    {
+        title: "Going Mutex Crazy!",
+        date: "Feb 13 2024",
+        blurb: "Read locks, write locks, what to use and when to use them?",
+        category: "Production",
+        author: "Zoe Collins",
+        imageUrl: "zoe.jpg",
+        content: "Today I decided to look more into locks and how to lock all operations/functions in our system, as this would play a big part in getting the system working over NFS. I discovered that there are two different types of locks that are pre implemented in the <strong>sync</strong> package in Go: RLock() and Lock(). RLock() allows for concurrent read operations, as long as there is no write, and Lock() is for write only operations, one at a time, like the ones I had put on saving the hashmaps.<br><br> I methodically went through and figured out which type of lock I needed for each function, with the general rule of if the function was modifying data in any way it needed a Lock(). I added locks in each file in the metadata package, where they were needed: <strong><br><br>persistence_api.go<br>common.go<br>directory_metadata.go<br>regular_file_metadata.go<br>general_api.go<br><br></strong> In figuring out when to use dirMutex or metadataMutex, I added a boolean flag to check whether we are working with a directory or not, and I pass it to each function where both locks could be implemented.<br><br> After this, I started implementing sysadmin privileges. I made a sysadmin struct, which holds the sysadmin’s UID, GID and a flag to tell if the sysadmin has been set. I worked on saving and retrieving the sysadmin struct, and setting a user as the sysadmin.",
     },
     {
         title: "Fat test",
