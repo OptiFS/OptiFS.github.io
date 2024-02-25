@@ -348,6 +348,60 @@ Now I'm going to try and implement it in the filesystem.
         imageUrl: "niall.jpg",
         content: "I wrapped up unlinking with our metadata system and expanded the hashing module API for persistent node info removal. However, a quick test revealed a flaw: overwriting a file with identical content generated a new metadata entry, leaving an orphaned entry behind after deletion. Time to tackle proper deduplication! This requires careful atomic operations for reliable cleanup.<br><br>My next goal was to integrate our metadata system into more syscalls like '<code>ACCESS.</code>' I naively assumed they were all covered by '<code>ACCESS</code>', but ad-hoc tests with '<code>cat</code>', '<code>ls</code>', and '<code>rm</code>' showed otherwise. Each of these needs its own permissions implementation – a much bigger job than I bargained for!<br><br> After adding <code>Open</code>, <code>Read</code>, and <code>Write</code>, another hiccup: directory permissions weren't being respected. FUSE forces an all-or-nothing approach: either the kernel handles permissions, or we do it all ourselves. I wanted to blend approaches, but it's not that simple.<br><br>Since file-based metadata isn't enough, I need a new hashmap for directory permissions – directories don't have content hashes! Initially, I tried using paths as keys, then switched to inodes since they are readily available.  I need to test if my generated inodes are persistent.<br><br>After this, my code felt messy... cue a massive refactoring...<br><br>The hashing module was doing way more than hashing. I created a dedicated metadata module, splitting code across multiple files. Permissions logic got its own module as well. It's closer, but I'll do more refactoring tomorrow.<br><br>So to wrap it up;<br>Deduplication is trickier than it seems - atomic operations are key for reliable cleanup.<br>FUSE can be inflexible when it comes to permissions handling.<br>Refactoring is your friend! Don't let complexity overwhelm your code structure.",
     },
+    {
+        title: "Circular Imports and Cleaner Code: Merging Modules",
+        date: "Feb 7 2024",
+        blurb: "De-spaghettifying our codebase!",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "As our codebase surpassed 2000 lines, I focused on refactoring for maintainability. My file and node modules were too intertwined, and common operations begged for consolidation.  I started by creating an internal module with a common.go file.<br><br>Uh-oh! Circular imports emerged between file, node, and my new internal module. Since these modules were so tightly connected, I decided to merge them into a single vfs (virtual file system) module. This fixed the import issues, simplified the code, and let me adjust the scope of operations and attributes to be VFS-specific. Definitely a win.<br><br>Next up: directory permissions. It's a bit of a puzzle – sometimes only directory-related syscalls get triggered (opendir, mkdir, etc.), while other times access handles validation.<br><br>To tackle this, I refactored our access file, moving permission checks into the permissions module. This significantly streamlined things and made it simpler to integrate our custom directory metadata into the access call.<br><br>Testing shows our directory permission system is mostly working. There are some wrinkles to iron out, but it's a solid step forward!<br><br>Lessons Learned:<br>Don't underestimate the importance of refactoring as your project grows.<br>When faced with circular imports, consider if the modules truly need to be separate.<br>FUSE permissions can be a maze – understanding the interplay of different syscalls is key.",
+    },
+    {
+        title: "Small Check-in: Trying To Finish The Custom Metadata System",
+        date: "Feb 8 2024",
+        blurb: "Keep on keeping on!",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "Not all too much to report today.<br><br>I'm working on trying to finally finish the <strong>full</strong> implementation of our custom metadata system so we can move forward onto deduplication.<br><br>One thing I have noticed though however, is that our code is so much easier to expand and maintain after all the refactoring I performed yesterday.<br><br>Seems like we're finally making good progress with the project. I think we <strong>DEFINITELY</strong> underestimated the complexities of this project. Even just creating your own virtual filesystem in FUSE is a very difficult undertaking, nevermind the loopback design, or implementing your own custom metadata and permissions system ontop of deduplicating!<br><br>But we're getting there!",
+    },
+    {
+        title: "A Grave Fault With Our Deduplication Approach",
+        date: "Feb 9 2024",
+        blurb: "Sometimes you don't always make progress...",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "Unfortunately today I unsuccesfully implemented the de-duplication feature of our filesystem.<br><br>I spent all day today meticulously implementing what I thought would be a clean, workable solution for de-duplicating content on our filesystem. However, it proved to only produce spaghetti code that didn't even work!<br><br>I have found a grave error in the logic of our filesystem. The way that FUSE works and indexes/remembers virtual nodes, is through their inodes.<br><br>In our current filesystem, we produce the inodes for virtual nodes from the nodes in the underlying filesystem. This is great as long as the underlying node doesn't change.<br><br>HOWEVER, in our filesystem when we find that we're creating duplicate content, we turn the underlying node into a hardlink to the original content - can you see the flaw?<br><br>When the underlying node is converted to a hardlink, the next time we try to retrieve the virtual node that belongs to it, it generates the wrong one! This is because it uses the underlying node to generate the virtual node.<br><br>Not sure how to approach this cleanly, and quite frankly I've turned out codebase into spaghetti trying to diagnose this issue<br><br>Unfortunately, I've just decided to stash all the changes I've made today, and I'll tackle the problem properly tomorrow."
+    },
+    {
+        title: "Trying Again: Preparing For A Correct Deduplication Approach",
+        date: "Feb 10 2024",
+        blurb: "Hopefully we'll get it right this time!",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "Today I spend all day changing how we generate and retrieve our virtual FUSE nodes, so as to allow our deduplication implementation to work.<br><br>If you read my previous blog, you're aware of the issues I came across with our old implementation. But to get around it, I have decided to only generate our virtual nodes <strong>once</strong>. Before, anytime we wanted to interact with a virtual node, we would generate it from the underlying node. Now, we only generate it once, store it in our already-existing persistence hash map, and query that instead of the underlying filesystem.<br><br>It was quite a big job to change the behaviour, and it has added quite some complexity to our code, but it is a good and correct approach, and I believe it does actually slightly optimise our filesystem a small bit. Although I do have fears that another hash map could introduce a fear of bottlenecking, we really need to just get a working, functional filesystem before we begin optimising.<br><br>There's still a bit more to be done with integrating this approach throughout our filesystem calls, but I should be able to tackle deduplication soon."
+    },
+    {
+        title: "Finishing Our Preparation For Deduplication",
+        date: "Feb 11 2024",
+        blurb: "So many filesystem calls!",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "I have spent today working on finalising our new virtual node generation and retrieval system.<br><br>Specifically on Mknod (which is vital as this is what NFS uses, not Create!). I also implemented it on Symlink, but we seem to have a 'dangling symlink' bug - which means it ends up pointing to nothing! I'm not sure what this is about, but it's pretty low priority for the moment, as the deadline is approaching, we need a minimum viable product.<br><br>I will tackle the integration of hardlinks and renaming into the new virtual node generation/retrieval system tomorrow, along with hopefully the underlying de-duplication writes!"
+    },
+    {
+        title: "Even More Deduplication Issues",
+        date: "Feb 14 2024",
+        blurb: "When will it ever stop?",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "So, it's been a couple days, but I've managed to implement deduplication correctly and it works great! It was incredibly satisfying seeing it all work and come together in the end, but unfortunately it was too good to be true.<br><br>My current approach is that I'm hashing a file in the '<code>Write</code>' filesystem call. The logic behind this is that we can check the content being written to, hash it, and check if it's unique. If it is not unique, we throw away the write and simply perform our hardlinking deduplication logic. But if it is unique, we simply just allow it to write.<br><br>Now, unfortunately our lackluster testing allowed this solution to slide for a few days - until I began testing large files.<br><br>Our large files unfortunately completely break this solution. For whatever reason (likely due to inexperience or lackluster knowledge of filesystems), we forgot that writes for large files are performed in blocks - which completely breaks the logic of our solution that assumes that '<code>Write</code>' is only called once per file-write.<br><br>I have however, come up with a solution. I'm going to move the deduplication logic to '<code>Release</code>':<br> 1. Hash each write block and store<br> 2. Write to underlying filesystem<br> 3. Repeat as many times as necessary<br> 4. In RELEASE, hash all the hashes together (still deterministic - I think - and avoids loading entire filecontent into memory)<br> 5. Check if unique with overall hash<br> 6. If unique, simply update custom metadata + persistence<br> 7. If non-unique, overwrite written file with a hardlink and update metadata + persistence<br><br>This should (hopefully) work, and I will work on implementing it tomorrow!<br><br>Other things that I did today are;<br> - Fixed a bug where we couldn't re-name a de-duplicated file. (issue with pointers)<br> - Detecting duplicate files from persistent loaded data.<br><br>Oh, and happy Valentines Day!"
+    },
 ]
 
 blogs.sort(dateSorter);
