@@ -264,6 +264,54 @@ const blogs = [
         }
         </code></pre>`,
     },
+    {
+        title: "Implementing OptiFS Custom Metadata Hash Maps",
+        date: "Jan 31 2024",
+        blurb: "Making progress with our hardlinking solution!",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: `Today, I'm going to focus on implementing the hard-link/meta-data overriding solution.
+        <br><br>
+        First things first, see if we can encode complex data structures, as it's vital that these can be saved to disk.
+        <br><br>
+        I tried to encode the complex '<code>MapEntry</code>', of which has mixed attribute types, including nesting structs '<code>MapEntryNode</code>' and '<code>MapEntryNodeMetadata</code>'
+        <br><br>
+        Additionally, this is what our structs for the custom metadata system look like (in Golang of course);
+        <br>
+        <pre><code class='go'>type MapEntry struct {
+    ReferenceCount uint32
+    Nodes map[uint16]MapEntryNode
+    UnderlyingInode uint32
+}
+
+type MapEntryNode struct {
+    ReferenceNum uint32
+    User uint16
+    Metadata MapEntryNodeMetadata
+    ExtendedData map[string]string
+}
+
+type MapEntryNodeMetadata struct {
+    DeviceID uint16
+    Mode uint8
+    LinkCount uint16
+    Size uint64
+    ATime time.Time
+    CTime time.Time
+    MTime time.Time
+    BlockSize uint16
+    BlocksAllocated uint64
+}
+</code></pre>
+<p class="text-gray-500 text-lg mb-6">
+And it worked perfectly!
+<br><br>
+Encoded and decoded without a problem - although with the times we seem to lose the monotonic clock when decoded and encoded. I don't think that's a problem though.
+<br><br>
+Now I'm going to try and implement it in the filesystem.
+</p>`,
+    },
 ]
 
 blogs.sort(dateSorter);
