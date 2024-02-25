@@ -99,6 +99,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
             event.preventDefault();
             display();
         });
+
+        // Using highlightjs to perform any potential codeblock highlighting
+        hljs.highlightAll();
     }
 
     display();
@@ -159,7 +162,15 @@ const blogs = [
         imageUrl: "zoe.jpg",
         content: "As Niall was still polishing off the custom metadata system, I decided to have a look at the documentation required for this project, specifically the functional specification and the user manual. I wanted to get a good grasp of what was needed for each of these pieces of documentation, so that we could both be thinking about them while we were coding the actual project.<br><br> I started with the functional specification, and wrote the introduction section for that, as it is just a synopsis of the project itself, not needing any dirty details of the inner workings, which aren't finished yet.<br><br> I decided to have a look at the user manual and what was required, and then quickly got stuck. We needed to write about how the user interacts with our project - but the user (the students) <i>aren't supposed to know that our project is there!!</i> I decided to leave it and ask Stephen about it when we met with him.<br><br> Finally I did a little bit of debugging around the append function - as I had some concerns to do with <strong>race conditions over NFS</strong>, but all seemed well.",
     },
-    
+    {
+        title: "Fat test",
+        date: "Feb 16 2024",
+        blurb: "code blocks",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "codeblock highlighting test!<pre><code class=\"go\">func main() {log.Println(\"Hello World!\")}</code></pre>",
+    },
 ]
 
 blogs.sort(dateSorter);
