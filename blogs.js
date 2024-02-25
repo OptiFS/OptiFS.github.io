@@ -268,7 +268,7 @@ const blogs = [
         title: "Implementing OptiFS Custom Metadata Hash Maps",
         date: "Jan 31 2024",
         blurb: "Making progress with our hardlinking solution!",
-        category: "Brainstorming",
+        category: "Production",
         author: "Niall Ryan",
         imageUrl: "niall.jpg",
         content: `Today, I'm going to focus on implementing the hard-link/meta-data overriding solution.
@@ -311,6 +311,33 @@ Encoded and decoded without a problem - although with the times we seem to lose 
 <br><br>
 Now I'm going to try and implement it in the filesystem.
 </p>`,
+    },
+    {
+        title: "Implementing Our Custom Metadata System!",
+        date: "Feb 1 2024",
+        blurb: "Integrating custom metadata into OptiFS",
+        category: "Production",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "Today I completed a massive amount of work!<br><br>After finishing the implementation of our custom metadata hash maps I set out to actually integrate it into our OptiFS system.<br><br>This required an entire overhaul of '<code>Setattr</code>' and '<code>Getattr</code>' filesystem calls at the Node and File level!<br><br>It didn't take too long, but now we update and retrieve from out custom metadata hashmaps instead of the underlying filesystem, but I also have implemented it so as to query the underlying filesystem as a fall-back if a virtual FUSE node has no custom metadata entry in our hash maps.<br><br>I also performed numerous other small changes on the filesystem to better integrate our custom metadata system, but it seems to be working well at the moment, although there is still more work to do!",
+    },
+    {
+        title: "First Issues With The Custom Metadata System",
+        date: "Feb 2 2024",
+        blurb: "It was bound to happen, wasn't it?",
+        category: "Debugging",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "We hit a snag with our new metadata system. Writes seemed to work fine, but reads turned up empty files! Even worse, edits resulted in empty, read-only files. A quick stat check revealed that all metadata values were stuck at their defaults – our changes weren't being saved.<br><br>The culprit? Our lack of pointers. Without them, changes weren't making it back to the original data structures. Time to change everything to pointers!<br><br>I refactored our hashing module to use pointers. Previously, structs were being copied needlessly, leaving the originals untouched. With pointers in play, things finally fell into place – the fix works!<br><br>This little bug was a great reminder of how crucial choosing between values and pointers can be in Go, especially when you need to modify the contents of structs directly!",
+    },
+    {
+        title: "Unlocking Unlinking: A Metadata Challenge and Solution",
+        date: "Feb 3 2024",
+        blurb: "And additionally tackling persistence whilst we're at it!",
+        category: "Brainstorming",
+        author: "Niall Ryan",
+        imageUrl: "niall.jpg",
+        content: "Set out to tackle unlinking correctly with our custom metadata system. My initial plan seemed straightforward:<br><br>1. Find the metadata entry in the HashList.<br>2. Delete the metadata object if found.<br>3. Decrement the reference count in the parent MapEntry.<br>4. Delete the MapEntry if its reference count hits zero.<br>5. Finally, delete the node from the underlying filesystem.<br><br>Then I hit a roadblock. The unlink call happens on the parent directory, giving no direct access to the refNum and contentHash of the node being removed.<br><br>This also brought up the related issue of persistence. We need our filesystem nodes to keep their contentHash and refNums even when the system restarts.  Our existing hashmap handles metadata but wasn't designed for this.  Xattrs were an option but limited us to Linux and wouldn't play nice with our hardlink goals.<br><br>The solution? A new hashmap! This one would map filepaths to their refNum and contentHash. It would be created on Create calls and updated throughout operations.<br><br>This extra map does double duty:<br><strong>Persistence</strong>: We can serialize this hashmap to disk for loading when the filesystem starts again.<br><strong>Unlinking Solution</strong>: Now we can find a node's refNum and contentHash just by knowing its path.<br><br>Time to get this implemented!",
     },
 ]
 
